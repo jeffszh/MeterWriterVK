@@ -1,33 +1,55 @@
 package com.amware.meterwritervk
 
 import com.vaadin.flow.component.button.Button
-import com.vaadin.flow.component.html.H1
+import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.component.html.Label
 import com.vaadin.flow.component.orderedlayout.FlexComponent
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
+import com.vaadin.flow.component.tabs.Tab
+import com.vaadin.flow.component.tabs.Tabs
+import com.vaadin.flow.router.PageTitle
 import com.vaadin.flow.router.Route
+import com.vaadin.flow.router.RouterLayout
 
 @Route("")
-class MainView : VerticalLayout() {
+@PageTitle(MainView.titleText)
+class MainView : VerticalLayout(), RouterLayout {
+
+	companion object {
+		const val titleText = "水表写入器网页版"
+	}
 
 	init {
 		defaultHorizontalComponentAlignment = FlexComponent.Alignment.CENTER
-		val versionText = Label("V0.0.1")
-		add(H1("打字練習"), versionText, NavPane())
-		setHorizontalComponentAlignment(FlexComponent.Alignment.END, versionText)
+		add(VerticalLayout().apply {
+			width = "100%"
+			style["color"] = "#FC0"
+			style["background-color"] = "#08F"
+			alignItems = FlexComponent.Alignment.CENTER
+			isPadding = false
+			add(Label(titleText).apply {
+				//style["align"] = "center"
+			})
+		})
+		add(NavPane())
 	}
 
-	class NavPane : HorizontalLayout() {
+	class NavPane : Tabs() {
 		init {
-			add(
-					Button("练习输入密码") {
-						ui.get().navigate("pwExercise")
-					},
-					Button("键位练习") {
-//						UI.getCurrent().navigate(KeyPosExView::class.java)
-					}
-			)
+			add(Tab("one").apply {
+				add("第一个")
+			}, Tab("two").apply {
+				add("很好")
+			})
+		}
+	}
+
+	@Route("page1", layout = MainView::class)
+	class Page1 : Div(), RouterLayout {
+		init {
+			add(Button("返回主页") {
+				ui.get().navigate("")
+			})
 		}
 	}
 
