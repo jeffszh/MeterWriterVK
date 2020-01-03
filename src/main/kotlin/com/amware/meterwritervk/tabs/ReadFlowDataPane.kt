@@ -2,10 +2,10 @@ package com.amware.meterwritervk.tabs
 
 import com.vaadin.flow.component.button.Button
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
-import com.vaadin.flow.router.Route
 
-@Route("readFlowData")
-class ReadFlowDataPane : VerticalLayout() {
+class ReadFlowDataPane : VerticalLayout(), HasTitle {
+
+	override val title = "读流量数据"
 
 	init {
 		add("读取")

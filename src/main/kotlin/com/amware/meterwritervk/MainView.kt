@@ -1,10 +1,11 @@
 package com.amware.meterwritervk
 
 import com.amware.meterwritervk.model.MyData
+import com.amware.meterwritervk.tabs.HasTitle
 import com.amware.meterwritervk.tabs.ReadFlowDataPane
 import com.amware.meterwritervk.tabs.ReadPreciseFlowDataPane
+import com.vaadin.flow.component.Component
 import com.vaadin.flow.component.button.Button
-import com.vaadin.flow.component.html.Div
 import com.vaadin.flow.component.orderedlayout.FlexComponent
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout
 import com.vaadin.flow.component.orderedlayout.VerticalLayout
@@ -14,7 +15,6 @@ import com.vaadin.flow.router.PageTitle
 import com.vaadin.flow.router.Route
 import com.vaadin.flow.router.RouterLayout
 import org.springframework.beans.factory.annotation.Autowired
-import java.lang.Exception
 import javax.annotation.PostConstruct
 
 @Route("")
@@ -28,9 +28,9 @@ class MainView(
 		const val titleText = "水表写入器网页版"
 	}
 
-	private val tabPanes = arrayOf(
-			"读流量数据" to ReadFlowDataPane::class.java,
-			"读高精度流量数据" to ReadPreciseFlowDataPane::class.java
+	private val tabPanes = arrayOf<Component>(
+			ReadFlowDataPane(),
+			ReadPreciseFlowDataPane()
 	)
 
 	init {
@@ -41,26 +41,26 @@ class MainView(
 			style["background-color"] = "#08F"
 			justifyContentMode = FlexComponent.JustifyContentMode.CENTER
 			add(titleText)
-		})
-		add(HorizontalLayout().apply {
+		}, HorizontalLayout(
+				SerialPortPane(myData),
+				CenterPane().also {
+					expand(it)
+				},
+				Button("右边")
+		).apply {
 			defaultVerticalComponentAlignment = FlexComponent.Alignment.START
 			width = "100%"
-
-			val centerPane = CenterPane()
-			val rightPane = Button("右边")
-			expand(centerPane)
-//			add(serialPortPane, centerPane, rightPane)
-			add(SerialPortPane(myData), centerPane, rightPane)
 		})
 
 		println(myData.str1)
 		myData.str1 += " 然后呢？"
 	}
 
-	inner class CenterPane : VerticalLayout() {
+	inner class CenterPane : VerticalLayout(), RouterLayout {
 		init {
-			val navPane = NavPane()
+			val navPane = NavPane(this)
 			add(navPane)
+			navPane.initTabs()
 			add("一行字")
 			add(Button("一个按钮"))
 			add("两行字")
@@ -68,31 +68,37 @@ class MainView(
 		}
 	}
 
-	inner class NavPane : Tabs() {
-		init {
+	inner class NavPane(private val centerPane: CenterPane) : Tabs() {
+		fun initTabs() {
 //			orientation = Orientation.VERTICAL
 
-			tabPanes.forEach {
-				val tabText = it.first
-				val tabClass = it.second
-				val routeAnnotation = tabClass.getAnnotation(Route::class.java)
-				if (routeAnnotation == null) {
-					throw Exception("忘了加上 ${Route::class.java} 注解！")
-				} else {
-					add(Tab(tabText))
-				}
+			val tabMap = tabPanes.map {
+				Tab(
+						if (it is HasTitle) {
+							it.title
+						} else {
+							it.toString()
+						}
+				) to it
+			}.toMap()
+
+			tabMap.forEach {
+				add(it.key)
+				centerPane.add(it.value.apply {
+					isVisible = false
+				})
 			}
+
+			addSelectedChangeListener { event ->
+				tabMap.forEach {
+					it.value.isVisible = false
+				}
+				tabMap[event.source.selectedTab]?.isVisible = true
+			}
+
+			tabMap.values.first().isVisible = true
 		}
 	}
-
-//	@Route("page1", layout = CenterPane::class)
-//	class Page1 : Div(), RouterLayout {
-//		init {
-//			add(Button("返回主页") {
-//				ui.get().navigate("")
-//			})
-//		}
-//	}
 
 	@PostConstruct
 	fun loaded() {
